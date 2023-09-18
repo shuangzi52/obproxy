@@ -548,8 +548,8 @@ int ObMysqlSM::state_client_request_read(int event, void *data)
              K_(server_session), K_(client_entry_->eos));
   } else {
     switch (event) {
-      case VC_EVENT_READ_READY:
-      case VC_EVENT_READ_COMPLETE:
+      case VC_EVENT_READ_READY: // VC_EVENT_READ_READY = 100
+      case VC_EVENT_READ_COMPLETE: // VC_EVENT_READ_COMPLETE = 102
         // More data to parse
         break;
 
@@ -9995,7 +9995,7 @@ inline void ObMysqlSM::call_transact_and_set_next_state(TransactEntryFunc f)
   } else {
     f(trans_state_);
   }
-
+  // csch trans_state_.next_action_ 通过 TRANSACT_RETURN(SM_ACTION_PARTITION_LOCATION_LOOKUP, handle_pl_lookup) 赋值
   LOG_DEBUG("State Transition:", K_(sm_id),
             "last_action", ObMysqlTransact::get_action_name(last_action),
             "next_action", ObMysqlTransact::get_action_name(trans_state_.next_action_));

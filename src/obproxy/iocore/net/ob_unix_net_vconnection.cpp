@@ -391,7 +391,7 @@ inline bool ObUnixNetVConnection::handle_read_from_net_success(
       is_done = false;
     }
   } else {
-    if (EVENT_CONT != read_signal_and_update(VC_EVENT_READ_READY)) {
+    if (EVENT_CONT != read_signal_and_update(VC_EVENT_READ_READY)) { // csch VC_EVENT_READ_READY = 100
       // finish read, needn't reschedule
     } else if (OB_UNLIKELY(mutex != read_.vio_.mutex_.ptr_)) {
       // change of lock... don't look at shared variables!

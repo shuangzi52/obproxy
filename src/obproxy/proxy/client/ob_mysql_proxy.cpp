@@ -317,7 +317,7 @@ int ObMysqlProxyCont::do_post_request()
     }
   } else {
     if (NULL == timeout_action_) {
-      if (OB_FAIL(schedule_timeout())) {
+      if (OB_FAIL(schedule_timeout())) { // csch 调度（把超时事件加入 event_queue_external_ 队列）
         LOG_WARN("fail to schedule timeout action", K(ret));
       }
     }

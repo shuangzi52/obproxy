@@ -426,7 +426,7 @@ inline ObEvent *ObEThread::schedule_common(ObContinuation &cont, const ObHRTime 
   }
   return event;
 }
-
+// csch callback_event 默认值为 1
 inline ObEvent *ObEThread::schedule_imm(
     ObContinuation *cont, const int callback_event, void *cookie)
 {

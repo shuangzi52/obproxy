@@ -262,7 +262,7 @@ int ObMysqlSMApi::state_api_callout(int event, void *data)
 
             ObAPIHook *hook = cur_hook_;
             cur_hook_ = cur_hook_->next();
-            hook->invoke(OB_EVENT_MYSQL_READ_REQUEST + cur_hook_id_, sm_);
+            hook->invoke(OB_EVENT_MYSQL_READ_REQUEST + cur_hook_id_, sm_); // csch OB_EVENT_MYSQL_READ_REQUEST(60002) + OB_MYSQL_READ_RESPONSE_HOOK(3) = 60005
             is_return = true;
           }
           break;

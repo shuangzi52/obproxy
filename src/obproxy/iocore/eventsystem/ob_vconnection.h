@@ -60,7 +60,7 @@ class ObProxyMutex;
 
 // When a ObContinuation is first scheduled on a processor.
 #define VC_EVENT_IMMEDIATE               EVENT_IMMEDIATE
-
+// VC_EVENT_EVENTS_START = 100
 #define VC_EVENT_READ_READY              VC_EVENT_EVENTS_START
 
 /**
