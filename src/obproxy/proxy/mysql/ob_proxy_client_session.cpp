@@ -164,7 +164,7 @@ void ObProxyClientSession::handle_api_return(int event)
     case OB_MYSQL_SSN_START_HOOK:
       if (OB_EVENT_MYSQL_ERROR == event) {
         do_io_close();
-      } else if (OB_FAIL(start())) {
+      } else if (OB_FAIL(start())) { // csch 调用 ObProxyClientSession 子类的 start() 方法
         LOG_WARN("start client session failed, connection will be closed", K(ret));
       }
       break;

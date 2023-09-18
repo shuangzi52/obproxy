@@ -183,8 +183,8 @@ void ObMysqlSM::instantiate_func(ObMysqlSM &prototype, ObMysqlSM &new_instance)
     _PROXY_SM_LOG(DEBUG, "sm_id=%u, stack_size=%ld, next_action=%s, event=%s", \
                   sm_id_, stack_start - reinterpret_cast<int64_t>(&stack_start), \
                   #state_name, ObMysqlDebugNames::get_event_name(e)); } \
-  }
-
+   ObSocketManager::log_read_and_write(#state_name, "event_id", e, "N/A", 0); \
+}
 #define MYSQL_SM_SET_DEFAULT_HANDLER(h) {   \
   REMEMBER(-1,reentrancy_count_);         \
   default_handler_ = h;}
@@ -3436,7 +3436,7 @@ int ObMysqlSM::state_server_response_read(int event, void *data)
     // set server_read_begin_ no matter if error or timeout happen
     if (0 == milestones_.server_.server_read_begin_) {
       milestones_.server_.server_read_begin_ = get_based_hrtime();
-      cmd_time_stats_.server_process_request_time_ =
+      cmd_time_stats_.server_process_request_time_ = // csch 开始从 OBServer 读取数据的时间 - 把 SQL 发送给 OBServer 的时间，就是 OBServer 处理时间（或者说执行 SQL 的时间）
           milestone_diff(milestones_.server_.server_write_end_, milestones_.server_.server_read_begin_);
     }
   }
@@ -3499,7 +3499,7 @@ int ObMysqlSM::state_server_response_read(int event, void *data)
           cmd_time_stats_.server_response_read_time_ += (
             milestone_diff(milestones_.server_.server_read_begin_, milestones_.server_.server_read_end_)
             - cmd_time_stats_.plugin_decompress_response_time_
-            - cmd_time_stats_.server_response_analyze_time_);
+            - cmd_time_stats_.server_response_analyze_time_); ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_response_read_time_", cmd_time_stats_.server_response_read_time_, "position", 1000);
         }
       }
 
@@ -3613,7 +3613,7 @@ int ObMysqlSM::state_server_response_read(int event, void *data)
     if (0 == milestones_.server_.server_read_end_) {
       milestones_.server_.server_read_end_ = get_based_hrtime();
       cmd_time_stats_.server_response_read_time_ +=
-        milestone_diff(milestones_.server_.server_read_begin_, milestones_.server_.server_read_end_);
+        milestone_diff(milestones_.server_.server_read_begin_, milestones_.server_.server_read_end_); ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_response_read_time_", cmd_time_stats_.server_response_read_time_, "position", 2000);
     }
     handle_server_setup_error(event, data);
   }
@@ -4448,7 +4448,7 @@ int ObMysqlSM::state_server_request_send(int event, void *data)
       case VC_EVENT_WRITE_COMPLETE: {
         if (OB_UNLIKELY(get_global_performance_params().enable_trace_)) {
           milestones_.server_.server_write_end_ = get_based_hrtime();
-          cmd_time_stats_.server_request_write_time_ += (milestones_.server_.server_write_end_ - milestones_.server_.server_write_begin_);
+          cmd_time_stats_.server_request_write_time_ += (milestones_.server_.server_write_end_ - milestones_.server_.server_write_begin_); ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_request_write_time_", cmd_time_stats_.server_request_write_time_, "position", 1000);
         }
         
         if (enable_record_full_link_trace_info()) {
@@ -4550,7 +4550,7 @@ int ObMysqlSM::state_server_request_send(int event, void *data)
                  ObMysqlDebugNames::get_event_name(event), K_(sm_id));
         // if something unusual happened in sending request, also need to get request write time
         milestones_.server_.server_write_end_ = get_based_hrtime();
-        cmd_time_stats_.server_request_write_time_ += (milestones_.server_.server_write_end_ - milestones_.server_.server_write_begin_);
+        cmd_time_stats_.server_request_write_time_ += (milestones_.server_.server_write_end_ - milestones_.server_.server_write_begin_); ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_request_write_time_", cmd_time_stats_.server_request_write_time_, "position", 2000);
         ret = OB_CONNECT_ERROR;
         break;
 
@@ -4958,7 +4958,7 @@ int ObMysqlSM::main_handler(int event, void *data)
     }
   }
 
-  return VC_EVENT_CONT;
+  return VC_EVENT_CONT; // VC_EVENT_CONT = CONTINUATION_CONT = 1
 }
 
 // Handles completion of any mysql request tunnel
@@ -5149,7 +5149,7 @@ int ObMysqlSM::tunnel_handler_server(int event, ObMysqlTunnelProducer &p)
   int ret = OB_SUCCESS;
   STATE_ENTER(ObMysqlSM::tunnel_handler_server, event);
   milestones_.server_.server_read_end_ = get_based_hrtime();
-  cmd_time_stats_.server_response_read_time_ += p.cost_time_;
+  cmd_time_stats_.server_response_read_time_ += p.cost_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_response_read_time_", cmd_time_stats_.server_response_read_time_, "p.cost_time_", p.cost_time_);
 
   bool close_connection = false;
 
@@ -5663,7 +5663,7 @@ int ObMysqlSM::tunnel_handler_client(int event, ObMysqlTunnelConsumer &c)
               K_(client_session), K_(sm_id), K(ret));
   } else {
     milestones_.client_.client_end_ = get_based_hrtime();
-    cmd_time_stats_.client_response_write_time_ += c.cost_time_;
+    cmd_time_stats_.client_response_write_time_ += c.cost_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.client_response_write_time_", cmd_time_stats_.client_response_write_time_, "c.cost_time_", c.cost_time_);
     client_entry_->in_tunnel_ = false;
 
     switch (event) {
@@ -6164,7 +6164,7 @@ void ObMysqlSM::do_partition_location_lookup()
           tmp_entry->dec_ref();
         }
       }
-
+      // csch find_entry = false，缓存里没找到
       if (OB_UNLIKELY(!find_entry)) {
         ObRouteParam param;
         param.cont_ = this;
@@ -6200,7 +6200,7 @@ void ObMysqlSM::do_partition_location_lookup()
 
         LOG_DEBUG("Doing partition location Lookup", K_(sm_id), K(param));
         pl_lookup_action_handle = NULL;
-        ret = ObMysqlRoute::get_route_entry(param, sm_cluster_resource_, pl_lookup_action_handle);
+        ret = ObMysqlRoute::get_route_entry(param, sm_cluster_resource_, pl_lookup_action_handle); // csch 从 OBServer 读取路由信息，堆栈很长
       }
 
       if (OB_SUCC(ret)) {
@@ -8392,12 +8392,12 @@ int ObMysqlSM::setup_server_request_send()
         cmd_time_stats_.build_server_request_time_ += milestone_diff(build_server_request_begin, build_server_request_end);
         //reset before send request
         milestones_.server_.reset();
-        cmd_time_stats_.server_request_write_time_ = 0;
-        cmd_time_stats_.server_response_read_time_ = 0;
+        cmd_time_stats_.server_request_write_time_ = 0; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_request_write_time_", 0, "initialize", 0);
+        cmd_time_stats_.server_response_read_time_ = 0; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_response_read_time_", 0, "initialize", 0);
         cmd_time_stats_.plugin_decompress_response_time_ = 0;
         cmd_time_stats_.server_response_analyze_time_ = 0;
         cmd_time_stats_.ok_packet_trim_time_ = 0;
-        cmd_time_stats_.client_response_write_time_ = 0;
+        cmd_time_stats_.client_response_write_time_ = 0; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.client_response_write_time_", 0, "initialize", 0);
 
         MYSQL_INCREMENT_TRANS_STAT(SERVER_REQUESTS);
         milestones_.server_.reset();
@@ -9645,7 +9645,7 @@ inline void ObMysqlSM::update_cmd_stats()
   trans_stats_.client_transaction_idle_time_ += cmd_time_stats_.client_transaction_idle_time_;
 
   trans_stats_.client_request_read_time_ += cmd_time_stats_.client_request_read_time_;
-  trans_stats_.server_request_write_time_ += cmd_time_stats_.server_request_write_time_;
+  trans_stats_.server_request_write_time_ += cmd_time_stats_.server_request_write_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_request_write_time_", cmd_time_stats_.server_request_write_time_, "trans_stats_.server_request_write_time_", trans_stats_.server_request_write_time_);
   trans_stats_.client_process_request_time_ += (cmd_time_stats_.client_request_read_time_
                                                 + cmd_time_stats_.server_request_write_time_);
   cmd_time_stats_.server_connect_time_ =
@@ -9663,9 +9663,9 @@ inline void ObMysqlSM::update_cmd_stats()
 
   trans_stats_.server_process_request_time_ += cmd_time_stats_.server_process_request_time_;
 
-  trans_stats_.server_response_read_time_ += cmd_time_stats_.server_response_read_time_;
+  trans_stats_.server_response_read_time_ += cmd_time_stats_.server_response_read_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_response_read_time_", cmd_time_stats_.server_response_read_time_, "trans_stats_.server_response_read_time_", trans_stats_.server_response_read_time_);
 
-  trans_stats_.client_response_write_time_ += cmd_time_stats_.client_response_write_time_;
+  trans_stats_.client_response_write_time_ += cmd_time_stats_.client_response_write_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.client_response_write_time_", cmd_time_stats_.client_response_write_time_, "trans_stats_.client_response_write_time_", trans_stats_.client_response_write_time_);
 
   trans_stats_.server_response_analyze_time_ += cmd_time_stats_.server_response_analyze_time_;
   trans_stats_.ok_packet_trim_time_ += cmd_time_stats_.ok_packet_trim_time_;

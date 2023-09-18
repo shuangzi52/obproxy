@@ -434,7 +434,7 @@ void ObMysqlSMApi::do_api_callout_internal()
     cur_hook_ = NULL;
     cur_hook_count_ = 0;
     if (OB_SUCC(ret)) {
-      state_api_callout(0, NULL);
+      state_api_callout(0, NULL); // csch EVENT_NONE = CONTINUATION_NONE = 0
     } else {
       state_api_callout(MYSQL_API_ERROR, NULL);
     }

@@ -91,10 +91,7 @@ struct ifafilt;
 typedef unsigned int in_addr_t;
 #endif
 #include <sys/sysinfo.h>
-#ifdef EL9_PLATFORM
-#else 
 #include <sys/sysctl.h>
-#endif
 #include <dlfcn.h>
 #include <math.h>
 #include <float.h>

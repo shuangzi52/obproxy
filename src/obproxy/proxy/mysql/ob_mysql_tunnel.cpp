@@ -468,7 +468,7 @@ int ObMysqlTunnel::producer_run(ObMysqlTunnelProducer &p)
     }
   }
 
-  last_handler_event_time_ = get_based_hrtime();
+  last_handler_event_time_ = get_based_hrtime(); ObSocketManager::log_read_and_write("ObMysqlTunnel::producer_run", "last_handler_event_time_", last_handler_event_time_, "position", 1000);
 
   // Do the IO on the consumers first so data doesn't disappear out from under the tunnel
   for (ObMysqlTunnelConsumer *c = p.consumer_list_.head_; NULL != c && OB_SUCC(ret); c = c->link_.next_) {
@@ -740,7 +740,7 @@ bool ObMysqlTunnel::producer_handler(int event, ObMysqlTunnelProducer &p)
       // set how much I/O to do before async I/O is
       // initiated
       jump_point = p.vc_handler_;
-      p.cost_time_ += (get_based_hrtime() - last_handler_event_time_);
+      p.cost_time_ += (get_based_hrtime() - last_handler_event_time_); ObSocketManager::log_read_and_write("ObMysqlTunnel::producer_handler", "p.cost_time_", p.cost_time_, "last_handler_event_time_", last_handler_event_time_);
       if (OB_ISNULL(jump_point)) {
         LOG_ERROR("producer vc handler is NULL");
       } else if (OB_SUCCESS != (sm_->*jump_point)(event, p)) {
@@ -772,7 +772,7 @@ bool ObMysqlTunnel::producer_handler(int event, ObMysqlTunnelProducer &p)
       p.bytes_read_ = p.read_vio_->ndone_;
       // Interesting tunnel event, call SM
       jump_point = p.vc_handler_;
-      p.cost_time_ += (get_based_hrtime() - last_handler_event_time_);
+      p.cost_time_ += (get_based_hrtime() - last_handler_event_time_); ObSocketManager::log_read_and_write("ObMysqlTunnel::producer_handler", "p.cost_time_", p.cost_time_, "last_handler_event_time_", last_handler_event_time_);
       if (OB_ISNULL(jump_point)) {
         LOG_ERROR("producer vc handler is NULL");
       } else if (OB_SUCCESS != (sm_->*jump_point)(event, p)) {
@@ -924,7 +924,7 @@ bool ObMysqlTunnel::consumer_handler(int event, ObMysqlTunnelConsumer &c)
 
       // Interesting tunnel event, call SM
       jump_point = c.vc_handler_;
-      c.cost_time_ += (get_based_hrtime() - last_handler_event_time_);
+      c.cost_time_ += (get_based_hrtime() - last_handler_event_time_); ObSocketManager::log_read_and_write("ObMysqlTunnel::consumer_handler", "c.cost_time_", c.cost_time_, "last_handler_event_time_", last_handler_event_time_);
       if (OB_ISNULL(jump_point)) {
         LOG_ERROR("consumer vc handler is NULL");
       } else if (OB_SUCCESS != (sm_->*jump_point)(event, c)) {
@@ -1119,8 +1119,8 @@ int ObMysqlTunnel::main_handler(int event, void *data)
     sm_callback = producer_handler(event, *p);
     if (OB_UNLIKELY(get_global_performance_params().enable_trace_ && !sm_callback)) {
       current_time = get_based_hrtime();
-      p->cost_time_ += (current_time - last_handler_event_time_);
-      last_handler_event_time_ = current_time;
+      p->cost_time_ += (current_time - last_handler_event_time_); ObSocketManager::log_read_and_write("ObMysqlTunnel::main_handler", "p->cost_time_", p->cost_time_, "N/A", 0);
+      last_handler_event_time_ = current_time; ObSocketManager::log_read_and_write("ObMysqlTunnel::main_handler", "last_handler_event_time_", last_handler_event_time_, "position", 2000);
     }
   } else {
     if (OB_LIKELY(NULL != (c = get_consumer(reinterpret_cast<ObVIO *>(data))))) {
@@ -1130,8 +1130,8 @@ int ObMysqlTunnel::main_handler(int event, void *data)
       sm_callback = consumer_handler(event, *c);
       if (OB_UNLIKELY(get_global_performance_params().enable_trace_ && !sm_callback)) {
         current_time = get_based_hrtime();
-        c->cost_time_ += (current_time - last_handler_event_time_);
-        last_handler_event_time_ = current_time;
+        c->cost_time_ += (current_time - last_handler_event_time_); ObSocketManager::log_read_and_write("ObMysqlTunnel::main_handler", "c->cost_time_", c->cost_time_, "N/A", 0);
+        last_handler_event_time_ = current_time; ObSocketManager::log_read_and_write("ObMysqlTunnel::main_handler", "last_handler_event_time_", c->cost_time_, "position", 3000);
       }
     } else {
       LOG_WARN("ObMysqlTunnel::main_handler, unknown data",

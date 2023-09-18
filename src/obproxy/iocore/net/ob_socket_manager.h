@@ -34,9 +34,9 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
+#include <iostream>
 #include "iocore/net/ob_net_def.h"
-
+#include <fstream>
 namespace oceanbase
 {
 namespace obproxy
@@ -101,7 +101,7 @@ class ObSocketManager
   static int ssl_read(SSL *ssl, void *buf, const size_t size, int64_t &count, int &tmp_code);
   static int ssl_write(SSL *ssl, const void *buf, const size_t size, int64_t &count, int &tmp_code);
   static int handle_ssl_error(int tmp_code);
-
+  static void log_read_and_write(const char *type, const char *label1, int64_t value1, const char *label2, int64_t value2);
 private:
   DISALLOW_COPY_AND_ASSIGN(ObSocketManager);
 };
@@ -186,10 +186,10 @@ inline int ObSocketManager::accept(int sockfd, struct sockaddr *addr, int64_t *a
   } else {
     do {
       fd = ::accept(sockfd, addr, reinterpret_cast<socklen_t *>(addrlen));
+      log_read_and_write("accept", "server_fd", sockfd, "accept_fd", fd);
     } while (fd < 0 && EINTR == errno && !need_return_eintr);
-    if (OB_UNLIKELY(fd < 0)) {
-      ret = ob_get_sys_errno();
-    }
+      
+    if (OB_UNLIKELY(fd < 0)) { ret = ob_get_sys_errno(); }
   }
   return ret;
 }
@@ -273,7 +273,7 @@ inline int ObSocketManager::read(int sockfd, void *buf, const int64_t size, int6
   if (OB_UNLIKELY(sockfd < 3) || OB_ISNULL(buf) || OB_UNLIKELY(size < 0)) {
     ret = common::OB_INVALID_ARGUMENT;
   } else {
-    count = ::read(sockfd, buf, size);
+    count = ::read(sockfd, buf, size); log_read_and_write("read", "sockfd", sockfd, "size", size);
     if (OB_UNLIKELY(count < 0)) {
       ret = ob_get_sys_errno();
     }
@@ -301,7 +301,7 @@ inline int ObSocketManager::write(int sockfd, const void *buf, const int64_t siz
   if (OB_UNLIKELY(sockfd < 3) || OB_ISNULL(buf) || OB_UNLIKELY(size < 0)) {
     ret = common::OB_INVALID_ARGUMENT;
   } else {
-    count = ::write(sockfd, buf, size);
+    count = ::write(sockfd, buf, size); log_read_and_write("write", "sockfd", sockfd, "size", size);
     if (OB_UNLIKELY(count < 0)) {
       ret = ob_get_sys_errno();
     }
@@ -721,6 +721,15 @@ inline int ObSocketManager::handle_ssl_error(int tmp_code)
   }
 
   return ret;
+}
+void ObSocketManager::log_read_and_write(const char *type, const char *label1, int64_t value1, const char *label2, int64_t value2) {
+  char buf[255];
+  std::ofstream ofs;
+  ofs.open("/opt/data/workspace_c/obproxy/src/obproxy/log/rw.log", std::ios::app);
+  memset(buf, 0, sizeof(buf));
+  sprintf(buf, "thread_id = %ld, type = %s, %s = %ld, %s = %ld\n", GETTID(), type, label1, value1, label2, value2);
+  ofs.write(buf, strlen(buf));
+  ofs.close();
 }
 
 } // end of namespace net

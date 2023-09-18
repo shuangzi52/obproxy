@@ -173,6 +173,9 @@ DEF_TO_STRING(ObServerStateRefreshCont)
 int ObServerStateRefreshCont::schedule_refresh_server_state(const bool imm /*false*/)
 {
   int ret = OB_SUCCESS;
+  // 增加了这行 return 代码，直接返回，禁止定期更新服务器角色及 zone 状态，方便调试
+  return ret;
+
   if (OB_UNLIKELY(!is_inited_)) {
     ret = OB_NOT_INIT;
     LOG_WARN("not init", K_(is_inited), K(ret));

@@ -89,7 +89,7 @@ function do_config()
       ;;
     *)
       # configure for release
-      ./configure --with-gcc-version=9.3.0 --with-coverage=no --enable-buildtime=no --enable-strip-ut=no --enable-silent-rules --enable-dlink-observer=no --with-release
+      ./configure --with-gcc-version=9.3.0 --with-coverage=no --enable-buildtime=no --enable-strip-ut=no --enable-silent-rules --enable-dlink-observer=no
       echo -e "\033[31m ===build release version=== \033[0m"
       ;;
   esac
@@ -99,7 +99,7 @@ function do_make()
 {
   set -x
   sw
-  make $MAKE_ARGS
+  bear make $MAKE_ARGS
 }
 
 function do_rpm()

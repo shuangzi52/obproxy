@@ -157,7 +157,7 @@ int ObConnection::open(const ObNetVCOptions &opt)
     PROXY_SOCK_LOG(WARN, "fail to create socket", K(fd_), K(ret));
   } else {
     ObCleaner<ObConnection> cleanup(this, &ObConnection::cleanup);
-
+    ObSocketManager::log_read_and_write("open", "sockfd", fd_, "N/A", 0);
     if (OB_FAIL(ObSocketManager::setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,
                                             reinterpret_cast<const void *>(&SOCKOPT_ON),
                                             sizeof(SOCKOPT_ON)))) {
