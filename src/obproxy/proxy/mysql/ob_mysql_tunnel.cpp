@@ -604,7 +604,7 @@ inline int ObMysqlTunnel::producer_handler_packet(int event, ObMysqlTunnelProduc
         ret = VC_EVENT_EOS;
         break;
       }
-
+      // csch ObMysqlSM::state_server_response_read() 方法调用的 ObMysqlSM::handle_first_response_packet() 方法里，也增加了 server_response_analyze_time_ 的值
       sm_->cmd_time_stats_.server_response_analyze_time_ +=
         milestone_diff(packet_analyze_begin, get_based_hrtime());
 

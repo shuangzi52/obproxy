@@ -9645,7 +9645,7 @@ inline void ObMysqlSM::update_cmd_stats()
   trans_stats_.client_transaction_idle_time_ += cmd_time_stats_.client_transaction_idle_time_;
 
   trans_stats_.client_request_read_time_ += cmd_time_stats_.client_request_read_time_;
-  trans_stats_.server_request_write_time_ += cmd_time_stats_.server_request_write_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_request_write_time_", cmd_time_stats_.server_request_write_time_, "trans_stats_.server_request_write_time_", trans_stats_.server_request_write_time_);
+  trans_stats_.server_request_write_time_ += cmd_time_stats_.server_request_write_time_; ObSocketManager::log_read_and_write("trans_stats", "cmd_time_stats_.server_request_write_time_", cmd_time_stats_.server_request_write_time_, "trans_stats_.server_request_write_time_", trans_stats_.server_request_write_time_);
   trans_stats_.client_process_request_time_ += (cmd_time_stats_.client_request_read_time_
                                                 + cmd_time_stats_.server_request_write_time_);
   cmd_time_stats_.server_connect_time_ =
@@ -9663,9 +9663,9 @@ inline void ObMysqlSM::update_cmd_stats()
 
   trans_stats_.server_process_request_time_ += cmd_time_stats_.server_process_request_time_;
 
-  trans_stats_.server_response_read_time_ += cmd_time_stats_.server_response_read_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.server_response_read_time_", cmd_time_stats_.server_response_read_time_, "trans_stats_.server_response_read_time_", trans_stats_.server_response_read_time_);
+  trans_stats_.server_response_read_time_ += cmd_time_stats_.server_response_read_time_; ObSocketManager::log_read_and_write("trans_stats", "cmd_time_stats_.server_response_read_time_", cmd_time_stats_.server_response_read_time_, "trans_stats_.server_response_read_time_", trans_stats_.server_response_read_time_);
 
-  trans_stats_.client_response_write_time_ += cmd_time_stats_.client_response_write_time_; ObSocketManager::log_read_and_write("cmd_stats", "cmd_time_stats_.client_response_write_time_", cmd_time_stats_.client_response_write_time_, "trans_stats_.client_response_write_time_", trans_stats_.client_response_write_time_);
+  trans_stats_.client_response_write_time_ += cmd_time_stats_.client_response_write_time_; ObSocketManager::log_read_and_write("trans_stats", "cmd_time_stats_.client_response_write_time_", cmd_time_stats_.client_response_write_time_, "trans_stats_.client_response_write_time_", trans_stats_.client_response_write_time_);
 
   trans_stats_.server_response_analyze_time_ += cmd_time_stats_.server_response_analyze_time_;
   trans_stats_.ok_packet_trim_time_ += cmd_time_stats_.ok_packet_trim_time_;
